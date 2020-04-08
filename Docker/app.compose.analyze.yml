@@ -1,0 +1,28 @@
+version: "3.5"
+
+services:
+
+    data.sql:
+        container_name: data.sql
+        image: mcr.microsoft.com/mssql/server
+        ports:
+            - "1433:1433"
+        environment:
+            ACCEPT_EULA: Y
+            SA_PASSWORD: P@ssw0rd
+
+    analyze.geo:
+        container_name: analyze.geo
+        build:
+            context: .
+            dockerfile: app.compose.analyze.Dockerfile
+        image: analyze.geo
+        depends_on:
+            - 'data.sql'
+        ports:
+            - "6003:80"
+        env_file:
+            analyze.env
+
+    # to run tests
+    # docker-compose --file app.compose.test.yml up --build

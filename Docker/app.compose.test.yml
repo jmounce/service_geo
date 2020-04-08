@@ -1,0 +1,28 @@
+version: "3.5"
+
+services:
+
+    data.sql:
+        container_name: data.sql
+        image: mcr.microsoft.com/mssql/server
+        ports:
+            - "1433:1433"
+        environment:
+            ACCEPT_EULA: Y
+            SA_PASSWORD: P@ssw0rd
+
+    test.geo:
+        container_name: test.geo
+        build:
+            context: .
+            dockerfile: app.test.Dockerfile
+        image: test.geo
+        depends_on:
+            - 'data.sql'
+        ports:
+            - "6003:80"
+        environment:
+            ASPNETCORE_ENVIRONMENT: TestDocker
+
+    # to run tests
+    # docker-compose --file app.compose.test.yml up --build
