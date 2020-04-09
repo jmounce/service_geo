@@ -7,7 +7,7 @@ WORKDIR /src
 ARG PROJAPI="Geo.Service"
 ARG PROJMODEL="Geo.Service.Model"
 ARG BUILDCONFIG="Release"
-ARG PROGETFEED="http://proget.inflection.net/nuget/Inflection/"
+ARG PROGETFEED="https://inflection.jfrog.io/artifactory/api/nuget/inflectionnuget/"
 
 COPY $PROJAPI $PROJAPI
 COPY $PROJMODEL $PROJMODEL
