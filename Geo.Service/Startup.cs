@@ -66,7 +66,7 @@ namespace Geo.Service
 			Logger.LogCritical($"ENV: {Env.EnvironmentName}");
 			ReportLogLevel();
 
-			SetupExceptionHandler(app, env);
+			SetupExceptionHandler(app);
 
 			if (env.IsDevelopment())
 			{
@@ -114,50 +114,37 @@ namespace Geo.Service
 		/// Setup a global exception handler.
 		/// </summary>
 		/// <param name="app">The application.</param>
-		/// <param name="env"></param>
-		private void SetupExceptionHandler(IApplicationBuilder app, IWebHostEnvironment env)
+		private void SetupExceptionHandler(IApplicationBuilder app)
 		{
-			if (env.IsDevelopment())
+			app.UseExceptionHandler(errorApp =>
 			{
-				app.UseDeveloperExceptionPage();
-			}
-			else
-			{
-				app.UseExceptionHandler(errorApp =>
+				errorApp.Run(async context =>
 				{
-					errorApp.Run(async context =>
-					{
-						IExceptionHandlerFeature errorFeature = context.Features.Get<IExceptionHandlerFeature>();
-						Exception exception = errorFeature.Error.GetBaseException();
+					IExceptionHandlerFeature errorFeature = context.Features.Get<IExceptionHandlerFeature>();
+					Exception exception = errorFeature.Error.GetBaseException();
 
-						Logger.LogError(exception, "Exception caught in Default Exception Handler");
+					Logger.LogError(exception, "Exception caught in Default Exception Handler");
 
-						HttpStatusCode code = HttpStatusCode.InternalServerError;
+					HttpStatusCode code = HttpStatusCode.InternalServerError;
 
-						//HttpStatusCode code = exception is HttpTranslatableException ex
-						//	? ex.HttpStatusCode
-						//	: HttpStatusCode.InternalServerError;
+					//HttpStatusCode code = exception is HttpTranslatableException ex
+					//	? ex.HttpStatusCode
+					//	: HttpStatusCode.InternalServerError;
 
-						HttpRequest request = context.Request;
+					HttpRequest request = context.Request;
 
-						// All exceptions streamed to the body as this type
-						Uri url = new Uri($"{request.Scheme}://{request.Host}{request.Path.Value}");
-						ProblemDetails err = new ProblemDetails();
-						err.Status = (int) HttpStatusCode.InternalServerError;
-						err.Detail = msg;
+					// All exceptions streamed to the body as this type
+					Uri url = new Uri($"{request.Scheme}://{request.Host}{request.Path.Value}");
+					GeoServiceException error = new GeoServiceException(HttpStatusCode.InternalServerError, exception.Message, url, exception.StackTrace);
 
-						GeoServiceException error = new GeoServiceException(HttpStatusCode.InternalServerError, exception.Message, url, exception.StackTrace);
-						error.Message
+					HttpResponse response = context.Response;
+					response.StatusCode = (int)code;
+					response.ContentType = "application/json";
 
-						HttpResponse response = context.Response;
-						response.StatusCode = (int) code;
-						response.ContentType = "application/json";
-
-						await using HttpResponseStreamWriter writer = new HttpResponseStreamWriter(response.Body, Encoding.UTF8);
-						await writer.WriteAsync(error.ToJson());
-					});
+					await using HttpResponseStreamWriter writer = new HttpResponseStreamWriter(response.Body, Encoding.UTF8);
+					await writer.WriteAsync(error.ToJson());
 				});
-			}
+			});
 		}
 
 		private string GetConnectionStringFromConfig()
