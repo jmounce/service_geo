@@ -14,8 +14,8 @@ COPY $PROJMODEL $PROJMODEL
 COPY version.txt "$PROJAPI/wwwroot/"
 
 # Restore Packages
-RUN dotnet restore "$PROJAPI/$PROJAPI.csproj" -s $PROGETFEED
-RUN dotnet restore "$PROJMODEL/$PROJMODEL.csproj" -s $PROGETFEED
+RUN dotnet restore "$PROJAPI/$PROJAPI.csproj" -s $PROGETFEED -s "https://api.nuget.org/v3/index.json"
+RUN dotnet restore "$PROJMODEL/$PROJMODEL.csproj" -s $PROGETFEED -s "https://api.nuget.org/v3/index.json"
 
 # Build App
 RUN dotnet build "$PROJAPI/$PROJAPI.csproj" -c $BUILDCONFIG -o /app
