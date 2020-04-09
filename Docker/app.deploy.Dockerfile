@@ -29,17 +29,6 @@ RUN dotnet publish "$PROJAPI/$PROJAPI.csproj" -c $BUILDCONFIG -o /app
 FROM mcr.microsoft.com/dotnet/core/aspnet:3.1 AS final
 EXPOSE 80
 
-## Install AppD 
-ARG PROGETAPPDFEED="https://proget.inflection.net/endpoints/Appd-libs/content"
-ARG APPDTAR="Appdlib.tar"
-ARG APPDINSTALLDIR="/opt/appdynamics/dotnet"
-
-RUN mkdir -p $APPDINSTALLDIR \
-	&& cd $APPDINSTALLDIR \
-	&& curl -O $PROGETAPPDFEED/$APPDTAR \
-	&& tar -xf $APPDTAR \
-	&& rm $APPDTAR
-
 # Install API
 WORKDIR /app
 COPY --from=build /app .
